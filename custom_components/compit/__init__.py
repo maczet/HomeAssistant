@@ -112,28 +112,3 @@ async def get_device_definitions(hass: HomeAssistant, lang: str) -> DeviceDefini
     except json.JSONDecodeError:
         _LOGGER.error("Failed to parse device definitions file: %s", file_path)
         raise
-
-# async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-#     unload_ok = all(
-#         await asyncio.gather(
-#             *[hass.config_entries.async_forward_entry_unload(entry, platform) for platform in PLATFORMS]
-#         )
-#     )
-#
-#     if unload_ok:
-#         hass.data[DOMAIN].pop(entry.entry_id)
-#
-#     return unload_ok
-#
-# async def get_device_definitions(hass: HomeAssistant, lang: str) -> DeviceDefinitions:
-#
-#     file_name = f"devices_{lang}.json"
-#
-#     try:
-#         file_path = os.path.join(os.path.dirname(__file__), 'definitions', file_name)
-#
-#         with open(file_path, 'r', encoding='utf-8') as file:
-#             return DeviceDefinitions.from_json(json.load(file))
-#     except FileNotFoundError:
-#         print(f"File {file_path} not found.")
-#         return get_device_definitions(hass, "en")
