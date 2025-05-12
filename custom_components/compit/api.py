@@ -1,9 +1,10 @@
 import logging
 import asyncio
 from typing import Any
-from .types.DeviceState import DeviceState
-from .types.SystemInfo import SystemInfo
-from .const import API_URL
+from custom_components.compit.types.DeviceState import DeviceState
+from custom_components.compit.types.SystemInfo import SystemInfo
+from custom_components.compit.const import API_URL
+
 import aiohttp
 import async_timeout
 
@@ -152,6 +153,7 @@ class ApiWrapper:
                         url, headers=headers, json=data, auth=auth
                     )
                     return response
+                return None
 
         except asyncio.TimeoutError as exception:
             _LOGGER.error(
@@ -159,3 +161,4 @@ class ApiWrapper:
                 url,
                 exception,
             )
+            return None
