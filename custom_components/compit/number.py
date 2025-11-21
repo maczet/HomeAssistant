@@ -7,7 +7,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANURFACER_NAME
 from .coordinator import CompitDataUpdateCoordinator
-from .sensor_matcher import SensorMatcher
+from .helpers import build_entities_for_platform, EntityContext
 from .types.DeviceDefinitions import Parameter
 from .types.SystemInfo import Device
 
@@ -18,42 +18,30 @@ async def async_setup_entry(hass: HomeAssistant, entry, async_add_devices):
     """
     Set up number entities for the Compit integration from a configuration entry.
 
-    This function is responsible for initializing and adding number entities to
-    Home Assistant based on the provided configuration entry and the data retrieved
-    from the `CompitDataUpdateCoordinator`. It dynamically determines which devices
-    and parameters should be represented as number entities by matching their platform.
-    Only valid devices and parameters that match `Platform.NUMBER` are added.
-
-    Args:
-        hass (HomeAssistant): The Home Assistant instance.
-        entry: Configuration entry for the integration.
-        async_add_devices: A callback function to add device entities to Home Assistant.
+    This function initializes and adds number entities to Home Assistant based
+    on the provided configuration entry and data from the
+    CompitDataUpdateCoordinator. It delegates discovery of eligible
+    device/parameter combinations to helpers.py for better reuse.
     """
     coordinator: CompitDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_devices(
-        [
-            CompitNumber(coordinator, device, parameter, device_definition.name)
-            for gate in coordinator.gates
-            for device in gate.devices
-            if (
-                device_definition := next(
-                    (
-                        definition
-                        for definition in coordinator.device_definitions.devices
-                        if definition.code == device.type
-                    ),
-                    None,
-                )
-            )
-            is not None
-            for parameter in device_definition.parameters
-            if SensorMatcher.get_platform(
-                parameter,
-                coordinator.data[device.id].state.get_parameter_value(parameter),
-            )
-            == Platform.NUMBER
-        ]
+
+    def factory(
+        coordinator: CompitDataUpdateCoordinator,
+        ctx: EntityContext,
+    ) -> "CompitNumber":
+        return CompitNumber(
+            coordinator=coordinator,
+            device=ctx.device,
+            parameter=ctx.parameter,
+            device_name=ctx.device_name,
+        )
+
+    entities = build_entities_for_platform(
+        coordinator=coordinator,
+        platform=Platform.NUMBER,
+        factory=factory,
     )
+    async_add_devices(entities)
 
 
 class CompitNumber(CoordinatorEntity, NumberEntity):
@@ -123,16 +111,14 @@ class CompitNumber(CoordinatorEntity, NumberEntity):
 
     @property
     def extra_state_attributes(self):
-        items = []
-
-        items.append(
+        items = [
             {
                 "device": self.device.label,
                 "device_id": self.device.id,
                 "device_class": self.device.class_,
                 "device_type": self.device.type,
             }
-        )
+        ]
 
         return {
             "details": items,

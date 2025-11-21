@@ -7,7 +7,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import CompitDataUpdateCoordinator
-from .sensor_matcher import SensorMatcher
+from .helpers import build_entities_for_platform, EntityContext
 from .types.DeviceDefinitions import Parameter
 from .types.SystemInfo import Device
 
@@ -16,44 +16,32 @@ _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 async def async_setup_entry(hass: HomeAssistant, entry, async_add_devices):
     """
-    Sets up the switch platform for a specific entry in Home Assistant.
+    Set up switch entities for the Compit integration from a configuration entry.
 
-    This function initializes and adds switch devices dynamically based on the
-    provided entry, using the data from the specified coordinator object. The
-    devices are filtered according to their type, platform compatibility, and available
-    parameters.
-
-    Args:
-        hass (HomeAssistant): The Home Assistant core object.
-        entry: The configuration entry for the integration.
-        async_add_devices: Callback function to add devices to Home Assistant.
-
+    This function initializes and adds switch entities to Home Assistant based
+    on the provided configuration entry and data from the
+    CompitDataUpdateCoordinator. It delegates discovery of eligible
+    device/parameter combinations to helpers.py for better reuse.
     """
     coordinator: CompitDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_devices(
-        [
-            CompitSwitch(coordinator, device, parameter, device_definition.name)
-            for gate in coordinator.gates
-            for device in gate.devices
-            if (
-                device_definition := next(
-                    (
-                        definition
-                        for definition in coordinator.device_definitions.devices
-                        if definition.code == device.type
-                    ),
-                    None,
-                )
-            )
-            is not None
-            for parameter in device_definition.parameters
-            if SensorMatcher.get_platform(
-                parameter,
-                coordinator.data[device.id].state.get_parameter_value(parameter),
-            )
-            == Platform.SWITCH
-        ]
+
+    def factory(
+        coordinator: CompitDataUpdateCoordinator,
+        ctx: EntityContext,
+    ) -> "CompitSwitch":
+        return CompitSwitch(
+            coordinator=coordinator,
+            device=ctx.device,
+            parameter=ctx.parameter,
+            device_name=ctx.device_name,
+        )
+
+    entities = build_entities_for_platform(
+        coordinator=coordinator,
+        platform=Platform.SWITCH,
+        factory=factory,
     )
+    async_add_devices(entities)
 
 
 class CompitSwitch(CoordinatorEntity, SwitchEntity):
