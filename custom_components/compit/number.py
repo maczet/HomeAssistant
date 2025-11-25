@@ -26,8 +26,8 @@ async def async_setup_entry(hass: HomeAssistant, entry, async_add_devices):
     coordinator: CompitDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     def factory(
-            coordinator: CompitDataUpdateCoordinator,
-            ctx: EntityContext,
+        coordinator: CompitDataUpdateCoordinator,
+        ctx: EntityContext,
     ) -> "CompitNumber":
         return CompitNumber(
             coordinator=coordinator,
@@ -47,11 +47,11 @@ async def async_setup_entry(hass: HomeAssistant, entry, async_add_devices):
 class CompitNumber(CoordinatorEntity, NumberEntity):
 
     def __init__(
-            self,
-            coordinator: CompitDataUpdateCoordinator,
-            device: Device,
-            parameter: Parameter,
-            device_name: str,
+        self,
+        coordinator: CompitDataUpdateCoordinator,
+        device: Device,
+        parameter: Parameter,
+        device_name: str,
     ):
         super().__init__(coordinator)
         self.coordinator = coordinator
@@ -111,16 +111,14 @@ class CompitNumber(CoordinatorEntity, NumberEntity):
 
     @property
     def extra_state_attributes(self):
-        items = []
-
-        items.append(
+        items = [
             {
                 "device": self.device.label,
                 "device_id": self.device.id,
                 "device_class": self.device.class_,
                 "device_type": self.device.type,
             }
-        )
+        ]
 
         return {
             "details": items,
@@ -129,10 +127,10 @@ class CompitNumber(CoordinatorEntity, NumberEntity):
     async def async_set_native_value(self, value: int) -> None:
         try:
             if (
-                    await self.coordinator.api.update_device_parameter(
-                        self.device.id, self.parameter.parameter_code, value
-                    )
-                    != False
+                await self.coordinator.api.update_device_parameter(
+                    self.device.id, self.parameter.parameter_code, value
+                )
+                != False
             ):
                 self._value = value
                 self.async_write_ha_state()

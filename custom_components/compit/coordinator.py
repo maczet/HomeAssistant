@@ -19,11 +19,11 @@ class CompitDataUpdateCoordinator(DataUpdateCoordinator[dict[Any, DeviceInstance
     """Class to manage fetching data from the API."""
 
     def __init__(
-            self,
-            hass: HomeAssistant,
-            gates: List[Gate],
-            api: CompitAPI,
-            device_definitions: DeviceDefinitions,
+        self,
+        hass: HomeAssistant,
+        gates: List[Gate],
+        api: CompitAPI,
+        device_definitions: DeviceDefinitions,
     ) -> None:
         """Initialize."""
         self.devices: dict[Any, DeviceInstance] = {}
@@ -39,12 +39,12 @@ class CompitDataUpdateCoordinator(DataUpdateCoordinator[dict[Any, DeviceInstance
 
     @staticmethod
     def _build_definitions_index(
-            definitions: DeviceDefinitions,
+        definitions: DeviceDefinitions,
     ) -> Dict[Tuple[int, int], Device]:
         """Create an index for device definitions keyed by (class, code)."""
         index: Dict[Tuple[int, int], Device] = {}
         for d in definitions.devices:
-            index[(d._class, d.code)] = d
+            index[(d.device_class, d.code)] = d
         return index
 
     def _find_definition(self, class_id: int, type_code: int) -> Optional[Device]:

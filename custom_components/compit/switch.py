@@ -26,8 +26,8 @@ async def async_setup_entry(hass: HomeAssistant, entry, async_add_devices):
     coordinator: CompitDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     def factory(
-            coordinator: CompitDataUpdateCoordinator,
-            ctx: EntityContext,
+        coordinator: CompitDataUpdateCoordinator,
+        ctx: EntityContext,
     ) -> "CompitSwitch":
         return CompitSwitch(
             coordinator=coordinator,
@@ -46,11 +46,11 @@ async def async_setup_entry(hass: HomeAssistant, entry, async_add_devices):
 
 class CompitSwitch(CoordinatorEntity, SwitchEntity):
     def __init__(
-            self,
-            coordinator: CompitDataUpdateCoordinator,
-            device: Device,
-            parameter: Parameter,
-            device_name: str,
+        self,
+        coordinator: CompitDataUpdateCoordinator,
+        device: Device,
+        parameter: Parameter,
+        device_name: str,
     ):
         super().__init__(coordinator)
         self.coordinator = coordinator
